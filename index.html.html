@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Calificaciones Universitarias</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #18324a;
+      --muted: #5f7387;
+      --line: #d8e1ea;
+      --primary: #165586;
+      --primary-2: #0f4368;
+      --green: #80b348;
+      --red: #d9534f;
+      --yellow: #d9a323;
+      --shadow: 0 10px 24px rgba(22, 85, 134, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #f7fbff 0%, var(--bg) 100%);
+      color: var(--text);
+    }
+
+    .container {
+      width: min(1200px, 92%);
+      margin: 28px auto 60px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, #1f6ca8 100%);
+      color: white;
+      border-radius: 24px;
+      padding: 26px;
+      box-shadow: var(--shadow);
+      margin-bottom: 22px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 4vw, 42px);
+    }
+
+    .hero p {
+      margin: 0;
+      line-height: 1.5;
+      max-width: 880px;
+      color: rgba(255,255,255,0.92);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 18px 0 22px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-2); }
+    .btn-secondary { background: #e8f0f7; color: var(--primary); }
+    .btn-danger { background: #fdebea; color: var(--red); }
+    .btn-green { background: #edf6e2; color: #557d29; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .summary-card,
+    .subject-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .summary-card {
+      padding: 18px;
+    }
+
+    .summary-card .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .summary-card .value {
+      font-size: 30px;
+      font-weight: 800;
+    }
+
+    .subjects {
+      display: grid;
+      gap: 18px;
+    }
+
+    .subject-card {
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .subject-header {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    input, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid rgba(22, 85, 134, 0.15);
+      border-color: var(--primary);
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin: 0 0 16px;
+    }
+
+    .metric {
+      background: #f8fbfe;
+      border: 1px solid #e5edf5;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .metric .m-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .metric .m-value {
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .state {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .state.good { background: #edf6e2; color: #557d29; }
+    .state.warn { background: #fff6df; color: #9a7200; }
+    .state.bad { background: #fdebea; color: #b93d39; }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 860px;
+      background: white;
+    }
+
+    th, td {
+      border-bottom: 1px solid #e8edf2;
+      padding: 10px;
+      text-align: left;
+      font-size: 14px;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #f7fafc;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    .row-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .small-btn {
+      padding: 8px 12px;
+      font-size: 13px;
+      border-radius: 10px;
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .pill {
+      background: #eef5fb;
+      color: var(--primary);
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 900px) {
+      .subject-header {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .container { width: 95%; }
+      .subject-header { grid-template-columns: 1fr; }
+      .hero { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="login-badge">Acceso seguro</div>
+      <h1>Iniciar sesión</h1>
+      <p>
+        Entra al sistema de calificaciones con tu correo institucional o el usuario que prefieras. Tranquilo: esto es una validación local para proteger el acceso visual al sistema, no un servidor de la NASA.
+      </p>
+
+      <form id="loginForm" class="login-form">
+        <div class="field">
+          <label for="loginUser">Correo o usuario</label>
+          <input id="loginUser" type="text" placeholder="ejemplo@javerianacali.edu.co" autocomplete="username" required />
+        </div>
+
+        <div class="field">
+          <label for="loginPassword">Contraseña</label>
+          <input id="loginPassword" type="password" placeholder="Ingresa tu contraseña" autocomplete="current-password" required />
+        </div>
+
+        <div class="login-row">
+          <label class="remember-me">
+            <input id="rememberSession" type="checkbox" />
+            <span>Recordar sesión</span>
+          </label>
+          <button type="button" class="link-btn" onclick="fillDemoAccess()">Usar acceso demo</button>
+        </div>
+
+        <button type="submit" class="btn-primary login-btn">Entrar al sistema</button>
+        <p class="login-help">Demo: <strong>admin</strong> | Contraseña: <strong>1234</strong></p>
+        <p id="loginMessage" class="login-message"></p>
+      </form>
+    </div>
+  </div>
+
+  <div id="appScreen" class="app-screen hidden">
+    <div class="container">
+      <section class="hero">
+        <div class="hero-topbar">
+          <div>
+            <h1>Sistema de Calificaciones</h1>
+            <p>
+              Organiza tus materias, registra cada componente con su porcentaje y deja que el sistema calcule la nota acumulada, la proyección final y cuánto necesitas para aprobar. En otras palabras: menos sufrimiento manual, más control real.
+            </p>
+          </div>
+          <div class="session-box">
+            <div class="session-label">Sesión activa</div>
+            <div class="session-user" id="sessionUser">Usuario</div>
+            <button class="btn-danger small-btn" onclick="logout()">Cerrar sesión</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="toolbar">
+        <button class="btn-primary" onclick="addSubject()">+ Agregar materia</button>
+        <button class="btn-secondary" onclick="saveData()">Guardar</button>
+        <button class="btn-secondary" onclick="loadData(true)">Cargar</button>
+        <button class="btn-danger" onclick="resetAll()">Borrar todo</button>
+      </div>
+
+      <section class="summary-grid" id="summaryGrid"></section>
+      <section class="subjects" id="subjects"></section>
+
+      <p class="footer-note">
+        Escala usada: <span class="pill">0.0 a 5.0</span>. La nota acumulada suma solo los componentes que ya tienen nota. La proyección final asume que los pendientes siguen en <strong>0.0</strong> hasta que los llenes. Todo queda guardado en tu navegador con <strong>localStorage</strong>.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const DEMO_USER = 'admin';
+    const DEMO_PASSWORD = '1234';
+    const SESSION_KEY = 'gradeSystemSession';
+    const defaultSubject = () => ({
+      id: crypto.randomUUID(),
+      name: 'Nueva materia',
+      credits: 3,
+      passingGrade: 3.0,
+      components: [
+        { id: crypto.randomUUID(), name: 'Parcial 1', percent: 30, grade: '' },
+        { id: crypto.randomUUID(), name: 'Trabajo', percent: 20, grade: '' },
+        { id: crypto.randomUUID(), name: 'Final', percent: 50, grade: '' },
+      ]
+    });
+
+    let subjects = [];
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function toNumber(value) {
+      const n = parseFloat(value);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function round(num) {
+      return Math.round((num + Number.EPSILON) * 100) / 100;
+    }
+
+    function calculateSubject(subject) {
+      const totalPercent = subject.components.reduce((sum, c) => sum + (toNumber(c.percent) || 0), 0);
+      const completedPercent = subject.components.reduce((sum, c) => {
+        const grade = toNumber(c.grade);
+        return sum + (grade !== null ? (toNumber(c.percent) || 0) : 0);
+      }, 0);
+
+      const accumulated = subject.components.reduce((sum, c) => {
+        const grade = toNumber(c.grade);
+        const percent = toNumber(c.percent) || 0;
+        return sum + (grade !== null ? grade * (percent / 100) : 0);
+      }, 0);
+
+      const projected = accumulated;
+      const pendingPercent = Math.max(0, 100 - completedPercent);
+      let needed = 0;
+      if (pendingPercent > 0) {
+        needed = (subject.passingGrade - accumulated) / (pendingPercent / 100);
+      } else {
+        needed = subject.passingGrade - accumulated;
+      }
+
+      let status = { text: 'En riesgo', className: 'bad' };
+      if (accumulated >= subject.passingGrade) {
+        status = { text: 'Aprobando', className: 'good' };
+      } else if (needed <= 3.5 && pendingPercent > 0) {
+        status = { text: 'Recuperable', className: 'warn' };
+      } else if (pendingPercent === 0 && accumulated < subject.passingGrade) {
+        status = { text: 'Reprobada', className: 'bad' };
+      }
+
+      return {
+        totalPercent: round(totalPercent),
+        completedPercent: round(completedPercent),
+        accumulated: round(accumulated),
+        projected: round(projected),
+        pendingPercent: round(pendingPercent),
+        needed: round(needed),
+        status
+      };
+    }
+
+    function calculateGlobal() {
+      const totalSubjects = subjects.length;
+      const withGrades = subjects.filter(s => calculateSubject(s).completedPercent > 0).length;
+      const average = totalSubjects
+        ? round(subjects.reduce((sum, s) => sum + calculateSubject(s).accumulated, 0) / totalSubjects)
+        : 0;
+      const weightedAverage = (() => {
+        const totalCredits = subjects.reduce((sum, s) => sum + (toNumber(s.credits) || 0), 0);
+        if (!totalCredits) return 0;
+        const weightedSum = subjects.reduce((sum, s) => sum + calculateSubject(s).accumulated * (toNumber(s.credits) || 0), 0);
+        return round(weightedSum / totalCredits);
+      })();
+
+      return {
+        totalSubjects,
+        withGrades,
+        average,
+        weightedAverage
+      };
+    }
+
+    function renderSummary() {
+      const grid = document.getElementById('summaryGrid');
+      const stats = calculateGlobal();
+
+      grid.innerHTML = `
+        <div class="summary-card">
+          <div class="label">Materias</div>
+          <div class="value">${stats.totalSubjects}</div>
+        </div>
+        <div class="summary-card">
+          <div class="label">Con notas cargadas</div>
+          <div class="value">${stats.withGrades}</div>
+        </div>
+        <div class="summary-card">
+          <div class="label">Promedio simple</div>
+          <div class="value">${stats.average.toFixed(2)}</div>
+        </div>
+        <div class="summary-card">
+          <div class="label">Promedio ponderado por créditos</div>
+          <div class="value">${stats.weightedAverage.toFixed(2)}</div>
+        </div>
+      `;
+    }
+
+    function renderSubjects() {
+      const container = document.getElementById('subjects');
+      container.innerHTML = '';
+
+      subjects.forEach((subject, subjectIndex) => {
+        const calc = calculateSubject(subject);
+
+        const card = document.createElement('article');
+        card.className = 'subject-card';
+        card.innerHTML = `
+          <div class="subject-header">
+            <div class="field">
+              <label>Nombre de la materia</label>
+              <input type="text" value="${escapeHtml(subject.name)}" onchange="updateSubjectField(${subjectIndex}, 'name', this.value)">
+            </div>
+            <div class="field">
+              <label>Créditos</label>
+              <input type="number" min="0" step="1" value="${subject.credits}" onchange="updateSubjectField(${subjectIndex}, 'credits', this.value)">
+            </div>
+            <div class="field">
+              <label>Nota mínima para aprobar</label>
+              <input type="number" min="0" max="5" step="0.1" value="${subject.passingGrade}" onchange="updateSubjectField(${subjectIndex}, 'passingGrade', this.value)">
+            </div>
+            <div class="field">
+              <label>Estado</label>
+              <div class="state ${calc.status.className}">${calc.status.text}</div>
+            </div>
+            <div>
+              <button class="btn-danger" onclick="removeSubject(${subjectIndex})">Eliminar</button>
+            </div>
+          </div>
+
+          <div class="metrics">
+            <div class="metric">
+              <div class="m-label">Nota acumulada</div>
+              <div class="m-value">${calc.accumulated.toFixed(2)}</div>
+            </div>
+            <div class="metric">
+              <div class="m-label">Proyección actual</div>
+              <div class="m-value">${calc.projected.toFixed(2)}</div>
+            </div>
+            <div class="metric">
+              <div class="m-label">Porcentaje evaluado</div>
+              <div class="m-value">${calc.completedPercent.toFixed(0)}%</div>
+            </div>
+            <div class="metric">
+              <div class="m-label">Porcentaje pendiente</div>
+              <div class="m-value">${calc.pendingPercent.toFixed(0)}%</div>
+            </div>
+            <div class="metric">
+              <div class="m-label">Necesitas en lo que falta</div>
+              <div class="m-value">${formatNeeded(calc.needed, calc.pendingPercent, calc.accumulated, subject.passingGrade)}</div>
+            </div>
+            <div class="metric">
+              <div class="m-label">Suma de porcentajes</div>
+              <div class="m-value">${calc.totalPercent.toFixed(0)}%</div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Componente</th>
+                  <th>Porcentaje</th>
+                  <th>Nota</th>
+                  <th>Aporte</th>
+                  <th>Observación</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${subject.components.map((component, componentIndex) => {
+                  const percent = toNumber(component.percent) || 0;
+                  const grade = toNumber(component.grade);
+                  const contribution = grade !== null ? round(grade * (percent / 100)) : 0;
+                  return `
+                    <tr>
+                      <td><input type="text" value="${escapeHtml(component.name)}" onchange="updateComponent(${subjectIndex}, ${componentIndex}, 'name', this.value)"></td>
+                      <td><input type="number" min="0" max="100" step="1" value="${component.percent}" onchange="updateComponent(${subjectIndex}, ${componentIndex}, 'percent', this.value)"></td>
+                      <td><input type="number" min="0" max="5" step="0.1" value="${component.grade}" onchange="updateComponent(${subjectIndex}, ${componentIndex}, 'grade', this.value)"></td>
+                      <td>${grade !== null ? contribution.toFixed(2) : '0.00'}</td>
+                      <td>${grade === null ? 'Pendiente' : (grade >= 3 ? 'Va bien' : 'Ojo aquí')}</td>
+                      <td><button class="btn-danger small-btn" onclick="removeComponent(${subjectIndex}, ${componentIndex})">Quitar</button></td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="row-actions">
+            <button class="btn-secondary small-btn" onclick="addComponent(${subjectIndex})">+ Agregar componente</button>
+            <button class="btn-green small-btn" onclick="normalizePercentages(${subjectIndex})">Ajustar porcentajes a 100%</button>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      renderSummary();
+    }
+
+    function formatNeeded(needed, pendingPercent, accumulated, passingGrade) {
+      if (pendingPercent === 0) {
+        return accumulated >= passingGrade ? '0.00' : 'No alcanzó';
+      }
+      if (needed <= 0) return '0.00';
+      if (needed > 5) return '>5.0';
+      return needed.toFixed(2);
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function updateSubjectField(subjectIndex, field, value) {
+      if (field === 'credits') value = parseInt(value || '0', 10);
+      if (field === 'passingGrade') value = clamp(parseFloat(value || '0'), 0, 5);
+      subjects[subjectIndex][field] = value;
+      autoSaveAndRender();
+    }
+
+    function updateComponent(subjectIndex, componentIndex, field, value) {
+      if (field === 'percent') value = clamp(parseFloat(value || '0'), 0, 100);
+      if (field === 'grade') value = value === '' ? '' : clamp(parseFloat(value), 0, 5);
+      subjects[subjectIndex].components[componentIndex][field] = value;
+      autoSaveAndRender();
+    }
+
+    function addSubject() {
+      subjects.push(defaultSubject());
+      autoSaveAndRender();
+    }
+
+    function removeSubject(subjectIndex) {
+      subjects.splice(subjectIndex, 1);
+      autoSaveAndRender();
+    }
+
+    function addComponent(subjectIndex) {
+      subjects[subjectIndex].components.push({
+        id: crypto.randomUUID(),
+        name: 'Nuevo componente',
+        percent: 0,
+        grade: ''
+      });
+      autoSaveAndRender();
+    }
+
+    function removeComponent(subjectIndex, componentIndex) {
+      subjects[subjectIndex].components.splice(componentIndex, 1);
+      autoSaveAndRender();
+    }
+
+    function normalizePercentages(subjectIndex) {
+      const components = subjects[subjectIndex].components;
+      if (!components.length) return;
+      const equal = Math.floor(100 / components.length);
+      let used = 0;
+      components.forEach((c, i) => {
+        if (i === components.length - 1) {
+          c.percent = 100 - used;
+        } else {
+          c.percent = equal;
+          used += equal;
+        }
+      });
+      autoSaveAndRender();
+    }
+
+    function saveData() {
+      localStorage.setItem('gradeSystemSubjects', JSON.stringify(subjects));
+      alert('Datos guardados en este navegador. Esta vez sí quedaron amarrados.');
+    }
+
+    function loadData(showAlert = false) {
+      const raw = localStorage.getItem('gradeSystemSubjects');
+      if (raw) {
+        try {
+          subjects = JSON.parse(raw);
+          renderSubjects();
+          if (showAlert) alert('Datos cargados correctamente.');
+          return;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      if (!subjects.length) {
+        subjects = [
+          {
+            id: crypto.randomUUID(),
+            name: 'Anatomía',
+            credits: 4,
+            passingGrade: 3.0,
+            components: [
+              { id: crypto.randomUUID(), name: 'Parcial 1', percent: 25, grade: 3.8 },
+              { id: crypto.randomUUID(), name: 'Quiz', percent: 15, grade: 4.2 },
+              { id: crypto.randomUUID(), name: 'Parcial 2', percent: 25, grade: '' },
+              { id: crypto.randomUUID(), name: 'Final', percent: 35, grade: '' }
+            ]
+          }
+        ];
+      }
+      renderSubjects();
+    }
+
+    function resetAll() {
+      const ok = confirm('¿Seguro que quieres borrar todo? Esto elimina las materias guardadas en este navegador.');
+      if (!ok) return;
+      subjects = [defaultSubject()];
+      localStorage.removeItem('gradeSystemSubjects');
+      renderSubjects();
+    }
+
+    function autoSaveAndRender() {
+      localStorage.setItem('gradeSystemSubjects', JSON.stringify(subjects));
+      renderSubjects();
+    }
+
+    function showApp(username) {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('appScreen').classList.remove('hidden');
+      document.getElementById('sessionUser').textContent = username;
+      loadData();
+    }
+
+    function showLogin() {
+      document.getElementById('appScreen').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+    }
+
+    function fillDemoAccess() {
+      document.getElementById('loginUser').value = DEMO_USER;
+      document.getElementById('loginPassword').value = DEMO_PASSWORD;
+    }
+
+    function login(user, password, remember) {
+      const message = document.getElementById('loginMessage');
+      if (user === DEMO_USER && password === DEMO_PASSWORD) {
+        const session = { user, loggedIn: true, remember };
+        if (remember) {
+          localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+        } else {
+          sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+        }
+        message.textContent = '';
+        showApp(user);
+        return;
+      }
+      message.textContent = 'Usuario o contraseña incorrectos.';
+    }
+
+    function logout() {
+      localStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(SESSION_KEY);
+      showLogin();
+      document.getElementById('loginForm').reset();
+      document.getElementById('loginMessage').textContent = '';
+    }
+
+    function restoreSession() {
+      const saved = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
+      if (!saved) {
+        showLogin();
+        return;
+      }
+      try {
+        const session = JSON.parse(saved);
+        if (session.loggedIn && session.user) {
+          showApp(session.user);
+          return;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      showLogin();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('loginForm');
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const user = document.getElementById('loginUser').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const remember = document.getElementById('rememberSession').checked;
+        login(user, password, remember);
+      });
+      restoreSession();
+    });
+  </script>
+
+  <style>
+    .login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: radial-gradient(circle at top left, rgba(128, 179, 72, 0.15), transparent 24%), linear-gradient(135deg, #eef6fc 0%, #f4f7fb 50%, #edf6e2 100%);
+    }
+
+    .login-card {
+      width: min(460px, 100%);
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(216, 225, 234, 0.9);
+      border-radius: 26px;
+      box-shadow: 0 20px 40px rgba(22, 85, 134, 0.12);
+      padding: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .login-badge {
+      display: inline-block;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #e8f0f7;
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .login-card h1 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 4vw, 36px);
+    }
+
+    .login-card p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .login-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .remember-me {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .remember-me input {
+      width: auto;
+      margin: 0;
+    }
+
+    .link-btn {
+      background: transparent;
+      color: var(--primary);
+      padding: 0;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px 18px;
+      font-size: 15px;
+    }
+
+    .login-help {
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .login-message {
+      min-height: 20px;
+      margin: 0;
+      color: var(--red);
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .hero-topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .session-box {
+      min-width: 220px;
+      background: rgba(255,255,255,0.16);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 18px;
+      padding: 14px;
+      backdrop-filter: blur(8px);
+    }
+
+    .session-label {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      opacity: 0.86;
+      margin-bottom: 6px;
+    }
+
+    .session-user {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+  </style>
+</body>
+</html>
